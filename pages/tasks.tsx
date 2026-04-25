@@ -142,7 +142,7 @@ export default function Tasks() {
             )
           })}
         </div>
-        <Modal open={showAdd} title="New Task" onClose={() => setShowAdd(false)}>
+        <Modal isOpen={showAdd} title="New Task" onClose={() => setShowAdd(false)}>
           <div className="form-group"><label className="form-label">Title *</label><input className="form-input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="What needs to get done?" autoFocus /></div>
           <div className="form-group"><label className="form-label">Description</label><textarea className="form-input form-textarea" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional details" /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -156,7 +156,7 @@ export default function Tasks() {
           </div>
         </Modal>
         {showDetail && (
-          <Modal open={!!showDetail} title={showDetail.title} onClose={() => setShowDetail(null)}>
+          <Modal isOpen={!!showDetail} title={showDetail.title} onClose={() => setShowDetail(null)}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20, padding: '14px', background: 'var(--bg-card-alt)', borderRadius: 8 }}>
               {showDetail.priority && <div><div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 }}>Priority</div><div style={{ fontSize: 13, fontWeight: 600, color: priorityColors[showDetail.priority] }}>{showDetail.priority}</div></div>}
               {showDetail.due_date && <div><div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 }}>Due</div><div style={{ fontSize: 13 }}>{fmt(showDetail.due_date)}</div></div>}
