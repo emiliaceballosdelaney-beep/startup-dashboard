@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import StartupTabs from '../components/StartupTabs'
 import Modal from '../components/Modal'
+import { supabase } from '../lib/supabase'
 import type { Startup } from '../lib/supabase'
 
 interface MeetingRow { id: string; startup_id: string; title: string; date: string; attendees?: string[] | null; notes?: string | null; created_at: string }
@@ -24,13 +25,11 @@ export default function Meetings() {
 
   useEffect(() => {
     (async () => {
-      const { createClient } = await import('@supabase/supabase-js')
-      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-      const { data: st } = await sb.from('startups').select('*').order('name')
+            const { data: st } = await supabase.from('startups').select('*').order('name')
       if (st?.length) {
         setStartups(st)
         setSelectedId(st[0].id)
-        const { data: m } = await sb.from('startup_meetings').select('*').eq('startup_id', st[0].id).order('date', { ascending: false })
+        const { data: m } = await supabase.from('startup_meetings').select('*').eq('startup_id', st[0].id).order('date', { ascending: false })
         setMeetings(m || [])
       }
       setLoading(false)
@@ -38,9 +37,7 @@ export default function Meetings() {
   }, [])
 
   const loadMeetings = async (sid: string) => {
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    const { data } = await sb.from('startup_meetings').select('*').eq('startup_id', sid).order('date', { ascending: false })
+        const { data } = await supabase.from('startup_meetings').select('*').eq('startup_id', sid).order('date', { ascending: false })
     setMeetings(data || [])
   }
 
@@ -48,9 +45,7 @@ export default function Meetings() {
 
   const addMeeting = async () => {
     if (!form.title.trim() || !form.date) return
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    await sb.from('startup_meetings').insert({ ...form, startup_id: selectedId })
+        await supabase.from('startup_meetings').insert({ ...form, startup_id: selectedId })
     setForm({ title: '', date: '', attendees: '', notes: '' })
     setShowAdd(false)
     await loadMeetings(selectedId)
@@ -58,9 +53,7 @@ export default function Meetings() {
   }
 
   const deleteMeeting = async (id: string) => {
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    await sb.from('startup_meetings').delete().eq('id', id)
+        await supabase.from('startup_meetings').delete().eq('id', id)
     await loadMeetings(selectedId)
     showToast('Meeting deleted')
   }
