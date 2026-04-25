@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import StartupTabs from '../components/StartupTabs'
 import Modal from '../components/Modal'
+import { supabase } from '../lib/supabase'
 import type { Startup } from '../lib/supabase'
 
 interface MilestoneRow { id: string; startup_id: string; title: string; description?: string; target_date?: string; completed: boolean; created_at: string }
@@ -19,13 +20,11 @@ export default function Milestones() {
 
   useEffect(() => {
     (async () => {
-      const { createClient } = await import('@supabase/supabase-js')
-      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-      const { data: st } = await sb.from('startups').select('*').order('name')
+            const { data: st } = await supabase.from('startups').select('*').order('name')
       if (st?.length) {
         setStartups(st)
         setSelectedId(st[0].id)
-        const { data: m } = await sb.from('startup_milestones').select('*').eq('startup_id', st[0].id).order('target_date')
+        const { data: m } = await supabase.from('startup_milestones').select('*').eq('startup_id', st[0].id).order('target_date')
         setMilestones(m || [])
       }
       setLoading(false)
@@ -33,9 +32,7 @@ export default function Milestones() {
   }, [])
 
   const loadMilestones = async (sid: string) => {
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    const { data } = await sb.from('startup_milestones').select('*').eq('startup_id', sid).order('target_date')
+        const { data } = await supabase.from('startup_milestones').select('*').eq('startup_id', sid).order('target_date')
     setMilestones(data || [])
   }
 
@@ -43,9 +40,7 @@ export default function Milestones() {
 
   const addMilestone = async () => {
     if (!form.title.trim()) return
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    await sb.from('startup_milestones').insert({ ...form, startup_id: selectedId, completed: false })
+        await supabase.from('startup_milestones').insert({ ...form, startup_id: selectedId, completed: false })
     setForm({ title: '', description: '', target_date: '' })
     setShowAdd(false)
     await loadMilestones(selectedId)
@@ -53,17 +48,13 @@ export default function Milestones() {
   }
 
   const toggleComplete = async (m: MilestoneRow) => {
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    await sb.from('startup_milestones').update({ completed: !m.completed }).eq('id', m.id)
+        await supabase.from('startup_milestones').update({ completed: !m.completed }).eq('id', m.id)
     await loadMilestones(selectedId)
     showToast(m.completed ? 'Marked incomplete' : 'Milestone completed!')
   }
 
   const deleteMilestone = async (id: string) => {
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    await sb.from('startup_milestones').delete().eq('id', id)
+        await supabase.from('startup_milestones').delete().eq('id', id)
     await loadMilestones(selectedId)
     showToast('Milestone deleted')
   }
