@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import StartupTabs from '../components/StartupTabs'
 import Modal from '../components/Modal'
+import type { Startup } from '../lib/supabase'
 
-interface Startup { id: string; name: string }
-interface Meeting { id: string; startup_id: string; title: string; date: string; attendees?: string; notes?: string; created_at: string }
+interface MeetingRow { id: string; startup_id: string; title: string; date: string; attendees?: string; notes?: string; created_at: string }
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
@@ -12,10 +12,10 @@ const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 export default function Meetings() {
   const [startups, setStartups] = useState<Startup[]>([])
   const [selectedId, setSelectedId] = useState('')
-  const [meetings, setMeetings] = useState<Meeting[]>([])
+  const [meetings, setMeetings] = useState<MeetingRow[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
-  const [viewMeeting, setViewMeeting] = useState<Meeting | null>(null)
+  const [viewMeeting, setViewMeeting] = useState<MeetingRow | null>(null)
   const [toast, setToast] = useState('')
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [form, setForm] = useState({ title: '', date: '', attendees: '', notes: '' })
@@ -26,7 +26,7 @@ export default function Meetings() {
     (async () => {
       const { createClient } = await import('@supabase/supabase-js')
       const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-      const { data: st } = await sb.from('startups').select('id, name').order('name')
+      const { data: st } = await sb.from('startups').select('*').order('name')
       if (st?.length) {
         setStartups(st)
         setSelectedId(st[0].id)
@@ -65,20 +65,17 @@ export default function Meetings() {
     showToast('Meeting deleted')
   }
 
-  // Calendar helpers
   const year = currentMonth.getFullYear()
   const month = currentMonth.getMonth()
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const meetingDates = new Set(meetings.map(m => m.date?.split('T')[0]))
 
-  const calCells = []
+  const calCells: (number | null)[] = []
   for (let i = 0; i < firstDay; i++) calCells.push(null)
   for (let d = 1; d <= daysInMonth; d++) calCells.push(d)
 
-  const dateStr = (d: number) => `${year}-${String(month + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
-  const prevMonth = () => setCurrentMonth(new Date(year, month - 1, 1))
-  const nextMonth = () => setCurrentMonth(new Date(year, month + 1, 1))
+  const dateStr = (d: number) => year + '-' + String(month + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0')
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-main, #f5f0eb)' }}>
@@ -90,23 +87,21 @@ export default function Meetings() {
         <StartupTabs startups={startups} selectedId={selectedId} onChange={handleTabChange} />
 
         <div style={{ display: 'flex', gap: '2rem', marginTop: '1.5rem' }}>
-          {/* Calendar */}
           <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-light)', padding: '1.5rem', width: 320, flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>‹</button>
+              <button onClick={() => setCurrentMonth(new Date(year, month - 1, 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>&#8249;</button>
               <strong>{MONTHS[month]} {year}</strong>
-              <button onClick={nextMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>›</button>
+              <button onClick={() => setCurrentMonth(new Date(year, month + 1, 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>&#8250;</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center' }}>
               {DAYS.map(d => <div key={d} style={{ fontSize: '0.7rem', color: 'var(--text-muted)', padding: '4px 0' }}>{d}</div>)}
               {calCells.map((day, i) => {
-                if (!day) return <div key={'empty-' + i} />
+                if (!day) return <div key={'e'+i} />
                 const ds = dateStr(day)
                 const hasMeeting = meetingDates.has(ds)
                 return (
-                  <div key={day} style={{ padding: '6px', borderRadius: '6px', fontSize: '0.85rem', position: 'relative',
-                    background: hasMeeting ? 'var(--terracotta)' : 'transparent', color: hasMeeting ? '#fff' : 'var(--text-primary)', cursor: hasMeeting ? 'pointer' : 'default' }}
-                    onClick={() => hasMeeting && setViewMeeting(meetings.find(m => m.date?.startsWith(ds)) || null)}>
+                  <div key={day} style={{ padding: '6px', borderRadius: '6px', fontSize: '0.85rem', background: hasMeeting ? 'var(--terracotta)' : 'transparent', color: hasMeeting ? '#fff' : 'var(--text-primary)', cursor: hasMeeting ? 'pointer' : 'default' }}
+                    onClick={() => { if (hasMeeting) setViewMeeting(meetings.find(m => m.date?.startsWith(ds)) || null) }}>
                     {day}
                   </div>
                 )
@@ -114,7 +109,6 @@ export default function Meetings() {
             </div>
           </div>
 
-          {/* List */}
           <div style={{ flex: 1 }}>
             <button className="action-btn action-btn-primary" onClick={() => setShowAdd(true)} style={{ marginBottom: '1rem' }}>+ Log Meeting</button>
             {loading ? <p>Loading...</p> : meetings.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No meetings yet.</p> : (
@@ -127,7 +121,7 @@ export default function Meetings() {
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button className="action-btn action-btn-sage" onClick={() => setViewMeeting(m)}>View</button>
-                      <button className="action-btn" style={{ color: '#dc3545' }} onClick={() => deleteMeeting(m.id)}>✕</button>
+                      <button className="action-btn" style={{ color: '#dc3545' }} onClick={() => deleteMeeting(m.id)}>x</button>
                     </div>
                   </div>
                 ))}
