@@ -79,7 +79,7 @@ export default function Milestones() {
         <h1 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2rem', marginBottom: '0.25rem' }}>Milestones</h1>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{completed.length} of {milestones.length} complete</p>
 
-        <StartupTabs startups={startups} selectedId={selectedId} onChange={handleTabChange} />
+        <StartupTabs startups={startups} selected={selectedId} onChange={handleTabChange} />
 
         {milestones.length > 0 && (
           <div style={{ margin: '1.5rem 0', background: 'var(--bg-card)', borderRadius: '12px', padding: '1.25rem', border: '1px solid var(--border-light)' }}>
