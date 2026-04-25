@@ -123,7 +123,7 @@ export default function Clients() {
         <h1 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2rem', marginBottom: '0.25rem' }}>Clients</h1>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{total} clients tracked</p>
 
-        <StartupTabs startups={startups} selectedId={selectedId} onChange={handleTabChange} />
+        <StartupTabs startups={startups} selected={selectedId} onChange={handleTabChange} />
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', margin: '1.5rem 0' }}>
           {([['Total', total], ['Active', activeCount], ['Other', otherCount]] as [string, number][]).map(([label, val]) => (
