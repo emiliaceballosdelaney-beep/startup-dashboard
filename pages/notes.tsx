@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import StartupTabs from '../components/StartupTabs'
 import Modal from '../components/Modal'
+import { supabase } from '../lib/supabase'
 import type { Startup } from '../lib/supabase'
 
 interface Note { id: string; startup_id: string; title: string; content: string; tags: string[]; created_at: string }
@@ -25,13 +26,11 @@ export default function Notes() {
 
   useEffect(() => {
     (async () => {
-      const { createClient } = await import('@supabase/supabase-js')
-      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-      const { data: st } = await sb.from('startups').select('*').order('name')
+            const { data: st } = await supabase.from('startups').select('*').order('name')
       if (st?.length) {
         setStartups(st)
         setSelectedId(st[0].id)
-        const { data: n } = await sb.from('startup_notes').select('*').eq('startup_id', st[0].id).order('created_at', { ascending: false })
+        const { data: n } = await supabase.from('startup_notes').select('*').eq('startup_id', st[0].id).order('created_at', { ascending: false })
         setNotes(n || [])
       }
       setLoading(false)
@@ -39,9 +38,7 @@ export default function Notes() {
   }, [])
 
   const loadNotes = async (sid: string) => {
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    const { data } = await sb.from('startup_notes').select('*').eq('startup_id', sid).order('created_at', { ascending: false })
+        const { data } = await supabase.from('startup_notes').select('*').eq('startup_id', sid).order('created_at', { ascending: false })
     setNotes(data || [])
   }
 
@@ -49,9 +46,7 @@ export default function Notes() {
 
   const addNote = async () => {
     if (!form.title.trim()) return
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    await sb.from('startup_notes').insert({ ...form, startup_id: selectedId })
+        await supabase.from('startup_notes').insert({ ...form, startup_id: selectedId })
     setForm({ title: '', content: '', tags: [] })
     setShowAdd(false)
     await loadNotes(selectedId)
@@ -59,9 +54,7 @@ export default function Notes() {
   }
 
   const deleteNote = async (id: string) => {
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    await sb.from('startup_notes').delete().eq('id', id)
+        await supabase.from('startup_notes').delete().eq('id', id)
     await loadNotes(selectedId)
     showToast('Note deleted')
   }
