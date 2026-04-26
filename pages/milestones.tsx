@@ -23,8 +23,8 @@ export default function Milestones() {
             const { data: st } = await supabase.from('startups').select('*').order('name')
       if (st?.length) {
         setStartups(st)
-        const prosper = st.find((s: any) => s.name.toLowerCase().includes('prosper')); setSelectedId(prosper ? prosper.id : st[0].id)
-        const { data: m } = await supabase.from('startup_milestones').select('*').eq('startup_id', st[0].id).order('target_date')
+        const prosper = st.find((s: any) => s.name.toLowerCase().includes('prosper')); const defaultId = prosper ? prosper.id : st[0].id; setSelectedId(defaultId)
+        const { data: m } = await supabase.from('startup_milestones').select('*').eq('startup_id', defaultId).order('target_date')
         setMilestones(m || [])
       }
       setLoading(false)
