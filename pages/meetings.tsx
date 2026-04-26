@@ -28,7 +28,7 @@ export default function Meetings() {
             const { data: st } = await supabase.from('startups').select('*').order('name')
       if (st?.length) {
         setStartups(st)
-        setSelectedId(st[0].id)
+        const prosper = st.find((s: any) => s.name.toLowerCase().includes('prosper')); setSelectedId(prosper ? prosper.id : st[0].id)
         const { data: m } = await supabase.from('startup_meetings').select('*').eq('startup_id', st[0].id).order('date', { ascending: false })
         setMeetings(m || [])
       }
@@ -73,7 +73,7 @@ export default function Meetings() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-main, #f5f0eb)' }}>
       <Sidebar />
-      <main style={{ flex: 1, padding: '2.5rem 3rem' }}>
+      <main style={{ flex: 1, padding: '2.5rem 3rem', marginLeft: '224px' }}>
         <h1 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2rem', marginBottom: '0.25rem' }}>Meetings</h1>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{meetings.length} meetings logged</p>
 
